@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoBuild Analytics | Data Input</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #047857;
+            --secondary: #334155;
+            --text: #1e293b;
+            --muted: #64748b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Header --- */
+        nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* --- Main Content --- */
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            flex: 1;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--muted);
+        }
+
+        /* --- Sections & Cards --- */
+        .section-card {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            /* Reduced margin */
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .cat-badge {
+            background: var(--bg);
+            color: var(--muted);
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            margin-left: auto;
+        }
+
+        /* --- STRICT 2-COLUMN GRID --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* Forces 2 columns strictly */
+            gap: 1.5rem;
+            /* Space between columns */
+            row-gap: 1.5rem;
+            /* Space between rows */
+        }
+
+        /* Mobile Responsive: Stack to 1 column on small screens */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 0;
+            /* Let grid handle gaps */
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text);
+            outline: none;
+            transition: 0.2s;
+            background: #fff;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .unit-hint {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        /* --- File Upload --- */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #fcfcfc;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.02);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--muted);
+        }
+
+        .file-info {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 0.5rem;
+        }
+
+        /* --- Footer Actions --- */
+        .action-bar {
+            position: sticky;
+            bottom: 0;
+            background: var(--white);
+            padding: 1rem 2rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--secondary);
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg);
+        }
+
+        /* --- Loading Overlay --- */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 1.5rem;
+            /* Larger text */
+            margin-top: 1rem;
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: none;
+            font-weight: 600;
+        }
+
+        .input-error {
+            border-color: var(--danger) !important;
+            background-color: #fef2f2 !important;
+        }
+
+        /* Enlarge spinner */
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border-width: 6px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+            </svg>EcoBuild<span>.ai</span></div><a href="EcoBuildDashboard.html" class="back-link">← Back to Dashboard
+        </a>
+    </nav>
+    <div class="container">
+        <div class="page-header">
+            <h1 id="projectNameDisplay">Project Inputs</h1>
+            <p>Complete the parameters below to initiate the environmental impact engine.</p>
+        </div>
+        <form id="analysisForm" onsubmit="handleAnalysis(event)">
+            <div class="section-card">
+                <div class="section-title"><span>📍</span>Site & Geography <span class="cat-badge">Location Data</span>
+                </div>
+                <div class="form-grid">
+                    <!-- < !-- Read Only Display -->
+                    <div class="form-group"><label>City (Selected in Dashboard)</label><input type="text"
+                            id="displayCity" disabled
+                            style="background: #f1f5f9; color: var(--muted); font-weight: bold;"><input type="hidden"
+                            name="city" id="hiddenCity"><small style="color:var(--muted)">Environmental baselines will
+                            be auto-fetched.</small></div>
+                    <div class="form-group"><label>Project Type</label><input type="text" id="displayType" disabled
+                            style="background: #f1f5f9; color: var(--muted); font-weight: bold;"><input type="hidden"
+                            name="project_type" id="hiddenType"></div>
+                    <div class="form-group"><label>Land Area</label>
+                        <div class="input-wrapper"><input type="number" name="land_area_m2" required><span
+                                class="unit-hint">m²</span></div>
+                    </div>
+                    <div class="form-group"><label>Built-up Area</label>
+                        <div class="input-wrapper"><input type="number" name="built_up_area_m2" required><span
+                                class="unit-hint">m²</span></div>
+                    </div>
+                    <div class="form-group"><label>Distance to Residential</label>
+                        <div class="input-wrapper"><input type="number" name="distance_to_residential_m"><span
+                                class="unit-hint">m</span></div>
+                    </div>
+                    <div class="form-group"><label>Dist. to Water Body</label>
+                        <div class="input-wrapper"><input type="number" name="distance_to_water_body_km"><span
+                                class="unit-hint">km</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-card">
+                <div class="section-title"><span>🏗️</span>Building & Operations <span class="cat-badge">Structure &
+                        Usage</span></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Total Floors</label><input type="number" name="floors"></div>
+                    <div class="form-group"><label>Total Rooms</label><input type="number" name="rooms"></div>
+                    <div class="form-group"><label>Daily Water Usage</label>
+                        <div class="input-wrapper"><input type="number" name="daily_water_m3"><span
+                                class="unit-hint">m³</span></div>
+                    </div>
+                    <div class="form-group"><label>Daily Solid Waste</label>
+                        <div class="input-wrapper"><input type="number" name="daily_waste_kg"><span
+                                class="unit-hint">kg</span></div>
+                    </div>
+                    <div class="form-group"><label>Hazardous Waste (Monthly)</label>
+                        <div class="input-wrapper"><input type="number" name="hazardous_waste_kg_per_month"><span
+                                class="unit-hint">kg</span></div>
+                    </div>
+                    <div class="form-group"><label>Vehicles Per Day</label><input type="number" name="vehicles_per_day">
+                    </div>
+                    <div class="form-group"><label>Daily Fuel Consumption</label>
+                        <div class="input-wrapper"><input type="number" name="fuel_consumption_l_per_day"><span
+                                class="unit-hint">L</span></div>
+                    </div>
+                    <div class="form-group"><label>DG Set Hours/Day</label><input type="number" name="dg_hours_per_day">
+                    </div>
+                </div>
+            </div>
+            <!-- Environmental Baseline Removed (Auto-Fetched) -->
+            <div class="section-card">
+                <div class="section-title"><span>🌱</span>Green Initiatives <span
+                        class="cat-badge">Sustainability</span></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Green Area</label>
+                        <div class="input-wrapper"><input type="number" name="green_area_percent"><span
+                                class="unit-hint">%</span></div>
+                    </div>
+                    <div class="form-group"><label>Rainwater Harvesting?</label><select name="has_rainwater_harvesting">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select></div>
+                    <div class="form-group"><label>Solar Installed?</label><select name="has_solar">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select></div>
+                    <div class="form-group"><label>Energy Efficient Lights?</label><select
+                            name="energy_efficient_lighting">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select></div>
+                    <div class="form-group"><label>Waste Segregation?</label><select name="waste_segregation">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select></div>
+                    <div class="form-group"><label>STP Present?</label><select name="stp_present">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select></div>
+                    <!-- Optional Vegetation Removal kept here if user wants to specify, otherwise could also be
+                            inferred or defaulted -->
+                    <div class="form-group"><label>Vegetation Removed</label>
+                        <div class="input-wrapper"><input type="number" name="vegetation_removed_percent"
+                                value="0"><span class="unit-hint">%</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-card">
+                <div class="section-title"><span>📄</span>Blueprint & CAD Upload </div>
+                <div class="upload-zone" id="dropZone">
+                    <div class="upload-icon">☁️</div>
+                    <h3>Drag & Drop files here</h3>
+                    <p class="file-info">Supports .PDF,
+                        .DWG,
+                        .DXF (Max 50MB)</p><input type="file" id="fileInput" hidden multiple><button type="button"
+                        class="btn-secondary" style="margin-top:1rem;"
+                        onclick="document.getElementById('fileInput').click()">Browse Files</button>
+                </div>
+                <div id="fileList" style="margin-top: 1rem; color: var(--primary); font-size: 0.9rem;"></div>
+            </div>
+        </form>
+    </div>
+    <div class="action-bar">
+        <button type="button" class="btn-secondary" onclick="autoFill()" style="margin-right: 1rem;">✨ Auto
+            Fill</button>
+        <button type="button" class="btn-secondary"
+            onclick="window.location.href='EcoBuildDashboard.html'">Cancel</button><button type="submit"
+            form="analysisForm" class="btn-primary">Run Environmental Analysis <span>⚡</span></button>
+    </div>
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+        <div class="loading-text">Analyzing 33 Data Points...</div>
+        <div class="loading-sub">Connecting to EcoBuild Backend Engine</div>
+    </div>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script> // 1. Supabase & Init
+        let user = null;
+        let currentProjectId = null;
+
+        function autoFill() {
+            // Realistic Dummy Data
+            const data = {
+                land_area_m2: 2500,
+                built_up_area_m2: 12000,
+                distance_to_residential_m: 150,
+                distance_to_water_body_km: 1.2,
+                floors: 12,
+                daily_water_m3: 45,
+                daily_waste_kg: 120,
+                hazardous_waste_kg_per_month: 5,
+                vehicles_per_day: 80,
+                fuel_consumption_l_per_day: 25,
+                dg_hours_per_day: 2,
+                green_area_percent: 15,
+                vegetation_removed_percent: 5
+            };
+
+            // Populate Inputs
+            for (const [key, val] of Object.entries(data)) {
+                const el = document.querySelector(`[name="${key}"]`);
+                if (el) el.value = val;
+            }
+
+            // Set Selects to 'Yes' for better score
+            const selects = ['has_rainwater_harvesting', 'has_solar', 'energy_efficient_lighting', 'waste_segregation', 'stp_present'];
+            selects.forEach(name => {
+                const el = document.querySelector(`[name="${name}"]`);
+                if (el) el.value = "1";
+            });
+        }
+
+
+        window.onload = async () => {
+
+            // Auth Check
+            const {
+                data: {
+                    session
+                }
+            }
+
+                = await supabase.auth.getSession();
+
+            if (!session) {
+                window.location.href = 'EcoBuildAuth.html';
+                return;
+            }
+
+
+
+            user = session.user;
+
+            // Get Project ID from Dashboard selection
+            currentProjectId = localStorage.getItem('currentProjectId');
+            const currentProjectName = localStorage.getItem('currentProjectName') || "New Project";
+
+            if (!currentProjectId) {
+                alert("No project selected! Redirecting to dashboard.");
+                window.location.href = 'EcoBuildDashboard.html';
+                return;
+            }
+
+            // Fetch Project Details from Supabase to pre-fill Context
+            const {
+                data: projectData, error
+            }
+
+                = await supabase.from('projects').select('*').eq('id', currentProjectId).single();
+
+            if (projectData) {
+                const display = document.getElementById('projectNameDisplay');
+                if (display) display.innerText = "Inputs for: " + projectData.project_name;
+
+                // Populate Geography Context
+                document.getElementById('displayCity').value = projectData.city || "Unknown";
+                document.getElementById('hiddenCity').value = projectData.city;
+
+                document.getElementById('displayType').value = projectData.project_type || "Residential";
+                document.getElementById('hiddenType').value = projectData.project_type || "Residential";
+
+                // Pre-fill other inputs if they exist in input_data
+                if (projectData.input_data) {
+                    const inputs = projectData.input_data;
+
+                    for (const [key, value] of Object.entries(inputs)) {
+                        const el = document.querySelector(`[name="${key}"]`);
+                        if (el && key !== 'city' && key !== 'project_type') el.value = value;
+                    }
+                }
+            }
+        }
+
+            ;
+
+        // 2. Tabs Logic
+        const tabs = document.querySelectorAll('.tab');
+        const sections = document.querySelectorAll('.form-section');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                const target = document.getElementById(tab.dataset.tab);
+                target.classList.add('active');
+            });
+        });
+
+        // 3. Blueprint Upload Logic
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        let uploadedBlueprintData = null;
+
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault(); dropZone.style.borderColor = 'var(--primary)'; dropZone.style.background = 'rgba(16, 185, 129, 0.05)';
+            });
+
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; dropZone.style.background = '#fcfcfc';
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; dropZone.style.background = '#fcfcfc'; handleFiles(e.dataTransfer.files);
+            });
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        async function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+
+                fileList.innerHTML = `<strong>Selected:</strong>$ {
+                    file.name
+                }
+
+                <span id="bpStatus">(Analyzing...)</span>`;
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const res = await fetch('http://localhost:8000/analyze-blueprint', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await res.json();
+
+                    if (result.success) {
+                        uploadedBlueprintData = result.data;
+                        document.getElementById('bpStatus').innerText = "✅ Analysis Complete (Complexity: " + result.data.complexity_score + "/10)";
+                        document.getElementById('bpStatus').style.color = 'green';
+                    }
+
+                    else {
+                        document.getElementById('bpStatus').innerText = "❌ " + result.message;
+                        document.getElementById('bpStatus').style.color = 'red';
+                    }
+                }
+
+                catch (e) {
+                    console.error(e);
+                    document.getElementById('bpStatus').innerText = "❌ Server Error";
+                    document.getElementById('bpStatus').style.color = 'red';
+                }
+            }
+        }
+
+        // 4. Main Analysis Handler
+        const form = document.getElementById('analysisForm');
+
+        if (form) {
+            form.onsubmit = handleAnalysis;
+        }
+
+        async function handleAnalysis(e) {
+            e.preventDefault();
+
+            // --- 0. Client Side Validation ---
+            let isValid = true;
+            const requiredFields = ['land_area_m2',
+                'built_up_area_m2',
+                'floors',
+                'daily_water_m3',
+                'daily_waste_kg'
+            ];
+
+            // Clear previous errors
+            document.querySelectorAll('.error-msg').forEach(el => el.remove());
+            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+
+            // Check inputs
+            let firstError = null;
+
+            const formDataRaw = new FormData(e.target);
+
+            for (const field of requiredFields) {
+                const val = formDataRaw.get(field);
+                const inputEl = document.querySelector(`[name="${field}"]`);
+
+                if (!val || val.trim() === '' || parseFloat(val) < 0) {
+                    isValid = false;
+                    if (inputEl) {
+                        inputEl.classList.add('input-error');
+
+                        // Create error text
+                        const err = document.createElement('div');
+                        err.className = 'error-msg';
+                        err.innerText = 'This field is required';
+                        err.style.display = 'block';
+
+                        // Insert after input wrapper or input
+                        const parent = inputEl.closest('.input-wrapper') || inputEl.parentNode;
+                        if (parent.classList.contains('input-wrapper')) {
+                            parent.parentNode.insertBefore(err, parent.nextSibling);
+                        } else {
+                            parent.appendChild(err);
+                        }
+
+                        if (!firstError) {
+                            firstError = inputEl;
+                            inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                }
+            }
+
+            if (!isValid) return; // Stop if invalid
+
+            // Show Loader (Big & Bold)
+            document.getElementById('loader').style.display = 'flex';
+            document.querySelector('.loading-text').innerText = "Analyzing Project Data...";
+
+            const formData = new FormData(e.target);
+            const rawData = Object.fromEntries(formData.entries());
+
+            // Type conversion for Simplified UserInput
+            const inputData = {
+                city: rawData.city,
+                project_type: rawData.project_type || "Residential",
+
+                // Specs
+                land_area_m2: parseFloat(rawData.land_area_m2) || 0,
+                built_up_area_m2: parseFloat(rawData.built_up_area_m2) || 0,
+                floors: parseInt(rawData.floors) || 1,
+                rooms: parseInt(rawData.rooms) || 1,
+
+                // Resources
+                daily_water_m3: parseFloat(rawData.daily_water_m3) || 0,
+                daily_waste_kg: parseFloat(rawData.daily_waste_kg) || 0,
+                hazardous_waste_kg_per_month: parseFloat(rawData.hazardous_waste_kg_per_month) || 0,
+
+                // Activity
+                vehicles_per_day: parseInt(rawData.vehicles_per_day) || 0,
+                fuel_consumption_l_per_day: parseFloat(rawData.fuel_consumption_l_per_day) || 0,
+                dg_hours_per_day: parseFloat(rawData.dg_hours_per_day) || 0,
+
+                // Context
+                distance_to_residential_m: parseFloat(rawData.distance_to_residential_m) || 0,
+                distance_to_water_body_km: parseFloat(rawData.distance_to_water_body_km) || 0,
+
+                // Green Features
+                green_area_percent: parseFloat(rawData.green_area_percent) || 0,
+                has_rainwater_harvesting: parseInt(rawData.has_rainwater_harvesting) || 0,
+                has_solar: parseInt(rawData.has_solar) || 0,
+                energy_efficient_lighting: parseInt(rawData.energy_efficient_lighting) || 0,
+                waste_segregation: parseInt(rawData.waste_segregation) || 0,
+                stp_present: parseInt(rawData.stp_present) || 0,
+
+                // Optional
+                vegetation_removed_percent: parseFloat(rawData.vegetation_removed_percent) || 0
+            }
+
+                ;
+
+            try {
+
+                // 1. Calculate Rule Based Impact
+                const impactRes = await fetch('http://localhost:8000/calculate-impact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputData)
+                });
+                if (!impactRes.ok) throw new Error(`Calculate Impact Failed: ${await impactRes.text()}`);
+                const impactData = await impactRes.json();
+
+                // 2. ML Prediction
+                const mlRes = await fetch('http://localhost:8000/predict-impact-ml', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputData)
+                });
+                if (!mlRes.ok) throw new Error(`ML Prediction Failed: ${await mlRes.text()}`);
+                const mlData = await mlRes.json();
+
+                // 3. Location Analysis (Via City Name)
+                const locRes = await fetch(`http://localhost:8000/analyze-location?city=${encodeURIComponent(inputData.city)}`);
+                if (!locRes.ok) throw new Error(`Location Analysis Failed: ${await locRes.text()}`);
+                const locData = await locRes.json();
+
+                // Store Results
+                const fullResult = {
+                    input: inputData,
+                    rule_based: impactData,
+                    ml: mlData,
+                    location: locData,
+                    blueprint: uploadedBlueprintData
+                }
+
+                    ;
+
+                // 4. Save to Supabase (Database Persistence)
+                if (currentProjectId) {
+                    const {
+                        error: dbError
+                    }
+
+                        = await supabase.from('projects').update({
+                            input_data: fullResult.input,
+                            analysis_result: fullResult,
+                            overall_score: impactData.overall_score,
+                            impact_class: impactData.impact_class
+                        }).eq('id', currentProjectId);
+
+                    if (dbError) throw dbError;
+                }
+
+                // Also save to LocalStorage
+                localStorage.setItem('analysisResult', JSON.stringify(fullResult));
+
+                // Redirect
+                window.location.href = 'EcoBuildOutput.html';
+
+            }
+
+            catch (error) {
+                console.error("Analysis Failed:", error);
+                alert("Processing Error: " + error.message);
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+    </script>
+</body>
+
+</html>

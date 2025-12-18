@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoBuild Analytics | Authentication</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #047857;
+            --secondary: #334155;
+            --accent: #dcfce7;
+            --text: #1e293b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            background-color: var(--white);
+        }
+
+        /* --- Left Side: Form Section --- */
+        .auth-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 160px 8% 40px;
+            max-width: 600px;
+            background: var(--white);
+            position: relative;
+            z-index: 2;
+            overflow-y: auto;
+        }
+
+        .logo {
+            position: absolute;
+            top: 40px;
+            left: 8%;
+            font-size: 3.75rem;
+            font-weight: 700;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            line-height: 1;
+            z-index: 10;
+        }
+
+        .logo svg {
+            width: 48px;
+            height: 48px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .form-header {
+            margin-bottom: 2rem;
+        }
+
+        .form-header h1 {
+            font-size: 2rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+            color: #64748b;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            /* Added extra padding on right so text doesn't hit the eye icon */
+            padding-right: 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+            outline: none;
+            color: var(--text);
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--accent);
+        }
+
+        /* --- New CSS for the Eye Icon --- */
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #94a3b8;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* --- Google Button Styles --- */
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+        .divider span {
+            padding: 0 10px;
+        }
+
+        .btn-google {
+            width: 100%;
+            padding: 12px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            color: var(--secondary);
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-google:hover {
+            background-color: #f8fafc;
+            border-color: var(--secondary);
+        }
+
+        .toggle-text {
+            margin-top: 2rem;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .toggle-link {
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .toggle-link:hover {
+            text-decoration: underline;
+        }
+
+        /* --- Right Side: Visual Section --- */
+        .visual-container {
+            flex: 1.2;
+            background-color: var(--secondary);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .visual-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at bottom left, var(--primary-dark), transparent 70%);
+            opacity: 0.8;
+        }
+
+        .visual-content {
+            position: relative;
+            z-index: 2;
+            padding: 4rem;
+            max-width: 600px;
+        }
+
+        .visual-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .visual-content p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: inline-block;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .auth-container {
+                padding: 140px 5% 4rem;
+                max-width: 100%;
+            }
+
+            .visual-container {
+                display: none;
+            }
+
+            .logo {
+                font-size: 2.5rem;
+                top: 30px;
+                left: 5%;
+            }
+
+            .logo svg {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-container">
+        <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+            </svg>
+            EcoBuild<span>.ai</span>
+        </div>
+
+        <div id="login-form" class="fade-in">
+            <div class="form-header">
+                <h1>Welcome back</h1>
+                <p>Enter your details to access the impact dashboard.</p>
+            </div>
+
+            <form>
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" class="input-field" placeholder="architect@firm.com" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="login-pass" class="input-field" placeholder="••••••••" required>
+                        <span class="password-toggle" onclick="togglePassword('login-pass')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                    </div>
+                    <div style="text-align: right; margin-top: 8px;">
+                        <a href="#" style="color: #64748b; font-size: 0.85rem; text-decoration: none;">Forgot
+                            password?</a>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-submit" onclick="window.location.href='EcoBuildDashboard.html'">Sign
+                    In</button>
+
+                <div class="divider">
+                    <span>Or</span>
+                </div>
+
+                <button type="button" class="btn-google">
+                    <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4" />
+                        <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853" />
+                        <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335" />
+                    </svg>
+                    Sign in with Google
+                </button>
+            </form>
+
+            <p class="toggle-text">
+                Don't have an account?
+                <span class="toggle-link" onclick="toggleAuth()">Create one today</span>
+            </p>
+        </div>
+
+        <div id="register-form" class="fade-in hidden">
+            <div class="form-header">
+                <h1>Create Account</h1>
+                <p>Start analyzing your construction footprint.</p>
+            </div>
+
+            <form>
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <div class="input-wrapper">
+                        <input type="text" class="input-field" placeholder="John Doe" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Organization / Firm</label>
+                    <div class="input-wrapper">
+                        <input type="text" class="input-field" placeholder="Construction Co." required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" class="input-field" placeholder="name@company.com" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="reg-pass" class="input-field" placeholder="Create a strong password"
+                            required>
+                        <span class="password-toggle" onclick="togglePassword('reg-pass')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-submit">Create Account</button>
+
+                <div class="divider">
+                    <span>Or</span>
+                </div>
+                <button type="button" class="btn-google">
+                    <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4" />
+                        <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853" />
+                        <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335" />
+                    </svg>
+                    Sign up with Google
+                </button>
+            </form>
+
+            <p class="toggle-text">
+                Already have an account?
+                <span class="toggle-link" onclick="toggleAuth()">Sign In</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="visual-container">
+        <div class="visual-content">
+            <h2>Design smarter, build greener.</h2>
+            <p>The most advanced tool for predicting construction waste and environmental impact before you break
+                ground.</p>
+
+            <div class="stat-card">
+                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                    Powered By</div>
+                <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">Advanced AI</div>
+                <!-- <div style="font-size: 0.8rem; opacity: 0.8;">Real-time impact estimation</div> -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+
+    <script>
+        // Check if already logged in
+        window.onload = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                window.location.href = 'EcoBuildDashboard.html';
+            }
+        };
+
+        // 1. Sign In (Email/Pass)
+        async function handleLogin() {
+            const email = document.querySelector('#login-form input[type="email"]').value;
+            const password = document.getElementById('login-pass').value;
+
+            if (!email || !password) return alert("Please enter email and password.");
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert(error.message);
+            } else {
+                window.location.href = 'EcoBuildDashboard.html';
+            }
+        }
+
+        // 2. Sign Up (Email/Pass)
+        async function handleRegister() {
+            const email = document.querySelector('#register-form input[type="email"]').value;
+            const password = document.getElementById('reg-pass').value;
+            const fullName = document.querySelector('#register-form input[placeholder="John Doe"]').value;
+
+            if (!email || !password) return alert("Please fill all fields.");
+
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: { full_name: fullName }
+                }
+            });
+
+            if (error) {
+                alert(error.message);
+            } else {
+                alert("Registration successful! Check your email for confirmation (if enabled) or Login.");
+                toggleAuth(); // Switch to login view
+            }
+        }
+
+        // 3. Google OAuth
+        async function handleGoogleLogin() {
+            // Using explicit localhost:8000 since we are now serving the app from the backend
+            // This is safer than window.location.origin if the user opens the file directly
+            const redirectUrl = 'http://localhost:8000/EcoBuildDashboard.html';
+
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: redirectUrl
+                }
+            });
+            if (error) alert(error.message);
+        }
+
+        // UI Toggles
+        function toggleAuth() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+
+            if (loginForm.classList.contains('hidden')) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            }
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === "password" ? "text" : "password";
+        }
+
+        // Attach Event Listeners to Buttons
+        document.querySelector('#login-form .btn-submit').onclick = handleLogin;
+        document.querySelector('#register-form .btn-submit').onclick = handleRegister;
+
+        const googleBtns = document.querySelectorAll('.btn-google');
+        googleBtns.forEach(btn => btn.onclick = handleGoogleLogin);
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoBuild Analytics | Analysis Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #047857;
+            --secondary: #334155;
+            --text: #1e293b;
+            --muted: #64748b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+            position: relative;
+        }
+
+        /* --- Nav --- */
+        nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-actions button {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--secondary);
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+        .nav-actions button:hover {
+            background: var(--bg);
+            border-color: var(--secondary);
+        }
+
+        /* --- Score Section --- */
+        .score-section {
+            background: linear-gradient(135deg, var(--secondary) 0%, #1e293b 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .score-container {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 8px solid rgba(255, 255, 255, 0.1);
+            border-top: 8px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .score-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .score-grade {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .confidence-score {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .confidence-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+        }
+
+        /* --- WEB LAYOUT (The "Previous Code") --- */
+        .dashboard-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            /* Side by Side */
+            gap: 1.5rem;
+            /* Named areas allow us to move things around for print */
+            grid-template-areas:
+                "chart insights"
+                "chart metrics";
+        }
+
+        .chart-card {
+            grid-area: chart;
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+        }
+
+        /* Specific IDs for the right column cards to assign grid areas */
+        #cardInsights {
+            grid-area: insights;
+        }
+
+        #cardMetrics {
+            grid-area: metrics;
+        }
+
+        .insight-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+        }
+
+        /* --- Chart & Content Styles --- */
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: 5px;
+            background: var(--bg);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .chart-tab {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .chart-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            min-height: 400px;
+        }
+
+        .insight-header {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .insight-item:last-child {
+            border-bottom: none;
+        }
+
+        .insight-icon {
+            width: 32px;
+            height: 32px;
+            background: #ecfdf5;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .insight-text h4 {
+            font-size: 0.9rem;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .insight-text p {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .action-bar {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-download {
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transition: 0.2s;
+        }
+
+        .btn-download:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .print-watermark {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "chart"
+                    "insights"
+                    "metrics";
+            }
+        }
+
+        /* --- PRINT LAYOUT TRANSFORMATION --- */
+        /* This rearranges the Side-by-Side web layout into the Top-Bottom print layout */
+        @media print {
+            @page {
+                margin: 5mm;
+                size: A4;
+            }
+
+            body {
+                padding: 0;
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                font-size: 11px;
+            }
+
+            .nav-actions,
+            .chart-tabs,
+            .action-bar,
+            nav {
+                display: none !important;
+            }
+
+            /* 1. Header Squeeze */
+            .score-section {
+                padding: 1rem;
+                margin-bottom: 10px;
+                border-bottom: 2px solid var(--primary);
+                background: white !important;
+                color: black !important;
+            }
+
+            .score-circle {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 0.2rem;
+                border-color: #ddd;
+                border-top-color: var(--primary);
+                border-width: 4px;
+            }
+
+            .score-value {
+                font-size: 1.5rem;
+            }
+
+            .score-grade,
+            .confidence-score,
+            .score-label {
+                color: black !important;
+                background: transparent;
+                margin-top: 2px;
+            }
+
+            .confidence-dot {
+                border: 1px solid black;
+            }
+
+            /* 2. Grid Reshuffle: Chart Top, Others Bottom Split */
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin: 0;
+                padding: 0 10px;
+                grid-template-areas:
+                    "chart chart"
+                    "insights metrics";
+            }
+
+            /* 3. Card Adjustments */
+            .chart-card {
+                grid-area: chart;
+                box-shadow: none;
+                border: 1px solid #ccc;
+                padding: 10px;
+                min-height: auto;
+            }
+
+            #cardInsights {
+                grid-area: insights;
+                box-shadow: none;
+                border: 1px solid #ccc;
+                padding: 10px;
+            }
+
+            #cardMetrics {
+                grid-area: metrics;
+                box-shadow: none;
+                border: 1px solid #ccc;
+                padding: 10px;
+            }
+
+            /* 4. Chart Squashing */
+            .canvas-container {
+                height: 250px !important;
+                min-height: 250px !important;
+            }
+
+            canvas {
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+            /* 5. Text shrinking */
+            .insight-item {
+                padding: 8px 0;
+            }
+
+            .insight-text p {
+                font-size: 10px;
+                line-height: 1.2;
+            }
+
+            .insight-text h4 {
+                font-size: 11px;
+            }
+
+            /* 6. Watermark */
+            .print-watermark {
+                display: block !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                text-align: center;
+                font-size: 9px;
+                color: #94a3b8;
+                background: white;
+                padding-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+            </svg>
+            EcoBuild<span>.ai</span>
+        </div>
+        <div class="nav-actions">
+            <button onclick="editProjectInputs()" style="margin-right: 10px;">✏️ Edit Data</button>
+            <button onclick="window.location.href='EcoBuildDashboard.html'">✕ Close Report</button>
+        </div>
+    </nav>
+
+    <div class="score-section">
+        <h2 style="margin-bottom: 1rem;">Environmental Impact Analysis</h2>
+        <div class="score-container">
+            <div class="score-circle">
+                <span class="score-value">84</span>
+            </div>
+            <span class="score-grade">Sustainability Grade: <strong>B+</strong></span>
+            <div class="confidence-score">
+                <div class="confidence-dot"></div>
+                AI Confidence Score: 98.2%
+            </div>
+            <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.7;">Based on 33 parameters provided</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title"><span>📊</span> Impact Visualization</div>
+                <div class="chart-tabs">
+                    <button class="chart-tab active" onclick="switchGraph('bubble')">Bubble Impact</button>
+                    <button class="chart-tab" onclick="switchGraph('doughnut')">Breakdown</button>
+                    <button class="chart-tab" onclick="switchGraph('radar')">Radar</button>
+                </div>
+            </div>
+            <div class="canvas-container">
+                <canvas id="mainChart"></canvas>
+            </div>
+            <p style="text-align: center; font-size: 0.8rem; color: var(--muted); margin-top: 10px;">
+                *Data visualized based on ISO 14040 Lifecycle Assessment standards.
+            </p>
+        </div>
+
+        <div class="insight-card" id="cardInsights">
+            <div class="insight-header"><span>🤖</span> AI Recommendations</div>
+            <div class="insight-item">
+                <div class="insight-icon">💡</div>
+                <div class="insight-text">
+                    <h4>Optimize Energy Mix</h4>
+                    <p>Install <strong>15kW Solar Panels</strong> to reduce carbon output by 12%.</p>
+                </div>
+            </div>
+            <div class="insight-item">
+                <div class="insight-icon">💧</div>
+                <div class="insight-text">
+                    <h4>Water Recycling</h4>
+                    <p>Implement a <strong>Greywater Treatment System</strong>.</p>
+                </div>
+            </div>
+            <div class="insight-item">
+                <div class="insight-icon">🧱</div>
+                <div class="insight-text">
+                    <h4>Material Subst.</h4>
+                    <p>Use <strong>Fly Ash Bricks</strong> to improve Eco-Score by 5pts.</p>
+                </div>
+            </div>
+            <div class="insight-item">
+                <div class="insight-icon">🚚</div>
+                <div class="insight-text">
+                    <h4>Logistics</h4>
+                    <p>Consolidate material deliveries to reduce PM2.5 emissions.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="insight-card" id="cardMetrics">
+            <div class="insight-header"><span>📉</span> Key Metrics</div>
+
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="font-size: 0.85rem; color: var(--muted);">Est. Carbon Footprint</span>
+                    <span style="font-weight: 700; color: var(--secondary);">145 Tons</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px;">
+                    <div style="width: 65%; height: 100%; background: var(--secondary); border-radius: 4px;"></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="font-size: 0.85rem; color: var(--muted);">Waste Generation</span>
+                    <span style="font-weight: 700; color: var(--secondary);">8.2 Tons/Mo</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px;">
+                    <div style="width: 40%; height: 100%; background: #fbbf24; border-radius: 4px;"></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="font-size: 0.85rem; color: var(--muted);">Water Efficiency</span>
+                    <span style="font-weight: 700; color: var(--secondary);">Good</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px;">
+                    <div style="width: 80%; height: 100%; background: #10b981; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="action-bar">
+        <button class="btn-download" onclick="printReport()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Full PDF Report
+        </button>
+    </div>
+
+    <div class="print-watermark" id="printWatermark">EcoBuild.ai Analytics Report</div>
+
+    <script>
+        let currentChartInstance = null;
+        const ctx = document.getElementById('mainChart').getContext('2d');
+
+        // Global configs (populated on load)
+        let bubbleConfig, doughnutConfig, radarConfig;
+
+        function switchGraph(type) {
+            document.querySelectorAll('.chart-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (currentChartInstance) currentChartInstance.destroy();
+
+            let config;
+            if (type === 'bubble') config = bubbleConfig;
+            else if (type === 'doughnut') config = doughnutConfig;
+            else config = radarConfig;
+
+            currentChartInstance = new Chart(ctx, config);
+        }
+
+        function editProjectInputs() {
+            window.location.href = 'EcoBuildInput.html';
+        }
+
+        function printReport() {
+            const date = new Date().toLocaleDateString();
+            document.getElementById('printWatermark').innerText = `EcoBuild.ai Analytics Report - Generated on ${date}`;
+            if (currentChartInstance) currentChartInstance.resize();
+            window.print();
+        }
+
+        window.onload = function () {
+            // Load Data
+            const raw = localStorage.getItem('analysisResult');
+            if (!raw) {
+                alert("No analysis data found. Redirecting to input...");
+                window.location.href = 'EcoBuildInput.html';
+                return;
+            }
+
+            const data = JSON.parse(raw);
+            const rb = data.rule_based;
+            const ml = data.ml;
+            const loc = data.location;
+            const bp = data.blueprint;
+
+            // Sustainbility Grade
+            const susScore = Math.max(0, Math.round(100 - rb.overall_score));
+            let grade = 'F';
+            let scoreColor = '#ef4444';
+
+            if (susScore >= 80) { grade = 'A'; scoreColor = '#10b981'; }
+            else if (susScore >= 60) { grade = 'B'; scoreColor = '#f59e0b'; }
+            else if (susScore >= 40) { grade = 'C'; scoreColor = '#f97316'; }
+            else { grade = 'D'; scoreColor = '#ef4444'; }
+
+            // UI Updates
+            const scoreCircle = document.querySelector('.score-circle');
+            scoreCircle.style.borderTopColor = scoreColor;
+            scoreCircle.style.boxShadow = `0 0 30px ${scoreColor}40`;
+
+            const scoreValue = document.querySelector('.score-value');
+            scoreValue.innerText = susScore;
+
+            document.querySelector('.score-grade').innerHTML = `Sustainability Grade: <strong style="color:${scoreColor}">${grade}</strong>`;
+
+            document.querySelector('.confidence-score').innerHTML = `
+                <div class="confidence-dot"></div>
+                AI Confidence Score: ${ml.confidence}% (${ml.label} Risk)
+            `;
+
+            // Metrics
+            const metricsHtml = `
+                <div class="insight-header"><span>📉</span> Key Metrics</div>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-size: 0.85rem; color: var(--muted);">Proj. PM2.5 Level</span>
+                        <span style="font-weight: 700; color: var(--secondary);">${rb.final_pollution['PM2.5']} µg/m³</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px;">
+                        <div style="width: ${Math.min(100, (rb.final_pollution['PM2.5'] / 300) * 100)}%; height: 100%; background: var(--secondary); border-radius: 4px;"></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-size: 0.85rem; color: var(--muted);">Review Risk Class</span>
+                         <span style="font-weight: 700; color: ${ml.label === 'High' ? 'red' : ml.label === 'Moderate' ? 'orange' : 'green'};">${ml.label}</span>
+                    </div>
+                </div>
+
+                 <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-size: 0.85rem; color: var(--muted);">Nearest Sensitive Zone</span>
+                        <span style="font-weight: 700; color: var(--secondary); text-align:right; font-size: 0.8rem;">${loc.nearest_location || 'None'}</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--muted); text-align: right;">
+                        ${loc.distance_km} km away (${loc.risk} Risk)
+                    </div>
+                </div>
+            `;
+            document.getElementById('cardMetrics').innerHTML = metricsHtml;
+
+            // Recommendations
+            let recHtml = `<div class="insight-header"><span>🤖</span> AI Recommendations</div>`;
+            rb.recommendations.forEach(rec => {
+                recHtml += `
+                 <div class="insight-item">
+                    <div class="insight-icon">💡</div>
+                    <div class="insight-text"><p>${rec}</p></div>
+                </div>`;
+            });
+            if (bp) {
+                recHtml += `
+                 <div class="insight-item" style="background: #f0fdf4;">
+                    <div class="insight-icon">📐</div>
+                    <div class="insight-text">
+                        <h4>Blueprint Analysis</h4>
+                        <p>Complexity Score: ${bp.complexity_score}/10<br>
+                        Est Area: ${bp.estimated_area_m2} m² (from DXF)</p>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('cardInsights').innerHTML = recHtml;
+
+            // --- CHART DATA SETUP ---
+            const bd = rb.breakdown;
+            const labels = ['Air', 'Water', 'Waste', 'Noise', 'Land'];
+            const values = [bd['Air Impact'], bd['Water Impact'], bd['Waste Impact'], bd['Noise Impact'], bd['Land Impact']];
+
+            // 1. Bubble Config (Simulated with X positions)
+            const bubbleData = values.map((val, i) => ({
+                x: (i + 1) * 20, // Spread: 20, 40, 60...
+                y: val,          // Height: Impact Score
+                r: Math.max(5, val / 3) // Size: Scaled Impact
+            }));
+
+            bubbleConfig = {
+                type: 'bubble',
+                data: {
+                    labels: labels, // For tooltip context
+                    datasets: [{
+                        label: 'Impact Severity (Y=Score, Size=Magnitude)',
+                        data: bubbleData,
+                        backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(251, 191, 36, 0.7)', 'rgba(244, 63, 94, 0.7)', 'rgba(139, 92, 246, 0.7)'],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            min: 0, max: 120,
+                            title: { display: true, text: 'Category Distribution' },
+                            ticks: { callback: (val) => '' },
+                            grid: { display: false }
+                        },
+                        y: {
+                            min: 0, max: 100,
+                            title: { display: true, text: 'Impact Score (Severity)' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const labelIndex = Math.round((context.raw.x / 20) - 1);
+                                    return labels[labelIndex] + ': ' + context.raw.y;
+                                }
+                            }
+                        },
+                        legend: { display: false }
+                    }
+                }
+            };
+
+            // 2. Doughnut Config
+            doughnutConfig = {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#3b82f6', '#10b981', '#fbbf24', '#f43f5e', '#8b5cf6'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
+            };
+
+            // 3. Radar Config
+            radarConfig = {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Project Impact',
+                        data: values,
+                        fill: true,
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderColor: '#10b981',
+                        pointBackgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { min: 0, max: 100 } }
+                }
+            };
+
+            // Initialize with Bubble Chart
+            currentChartInstance = new Chart(ctx, bubbleConfig);
+        };
+    </script>
+</body>
+
+</html>

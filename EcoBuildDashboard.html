@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoBuild Analytics | Dashboard</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #047857;
+            --secondary: #334155;
+            --text: #1e293b;
+            --muted: #64748b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--bg);
+            padding: 2rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            line-height: 1;
+            margin-bottom: 2rem;
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            color: var(--secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .header p {
+            color: var(--muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .box {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 220px;
+            /* Increased height slightly */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .box.empty {
+            border-color: rgba(100, 116, 139, 0.2);
+        }
+
+        .box.empty span {
+            color: rgba(100, 116, 139, 0.5);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .box.add-new {
+            cursor: pointer;
+            border-color: rgba(100, 116, 139, 0.3);
+        }
+
+        .box.add-new:hover {
+            border-color: var(--primary);
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+
+        .box.add-new:hover .plus-circle {
+            border-color: var(--primary);
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .box.add-new:hover .plus-circle svg {
+            stroke: var(--primary);
+        }
+
+        .box.add-new:hover .add-text {
+            color: var(--primary);
+        }
+
+        .plus-circle {
+            width: 56px;
+            height: 56px;
+            border: 2px dashed rgba(100, 116, 139, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .plus-circle svg {
+            stroke: var(--muted);
+            transition: all 0.3s ease;
+        }
+
+        .add-text {
+            color: var(--muted);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .box.filled {
+            border-color: rgba(16, 185, 129, 0.5);
+            background-color: rgba(16, 185, 129, 0.05);
+            align-items: flex-start;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .box.filled:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Updated Styling to accommodate Type */
+        .box.filled h3 {
+            font-size: 1.125rem;
+            color: var(--secondary);
+            margin-bottom: 0.25rem;
+            padding-right: 20px;
+        }
+
+        .box.filled .project-type-badge {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+        }
+
+        .box.filled p {
+            color: var(--muted);
+            font-size: 0.875rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            line-clamp: 3;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .box.filled .view-link {
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        .edit-btn-card {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .edit-btn-card:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: var(--secondary);
+        }
+
+        .delete-btn-card {
+            position: absolute;
+            top: 15px;
+            right: 50px;
+            /* Positioned to the left of the edit button */
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
+            /* Start muted like edit */
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn-card:hover {
+            background-color: #fee2e2;
+            color: #ef4444;
+            /* Red on hover */
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal h2 {
+            font-size: 1.25rem;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            color: var(--text);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-delete {
+            width: 100%;
+            padding: 14px;
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+        }
+
+        /* --- Comparison Mode Styles --- */
+        .compare-active .box {
+            opacity: 0.5;
+            cursor: pointer !important;
+        }
+
+        .compare-active .box.filled {
+            opacity: 1;
+        }
+
+        .compare-active .box.filled:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.3);
+            border-color: #fbbf24;
+        }
+
+        .box.selected-for-compare {
+            border-color: #fbbf24 !important;
+            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.5) !important;
+            background: #fffbeb !important;
+            position: relative;
+        }
+
+        .box.selected-for-compare::after {
+            content: "Selected";
+            position: absolute;
+            top: -10px;
+            right: 50%;
+            transform: translateX(50%);
+            background: #fbbf24;
+            color: #78350f;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .comparison-modal {
+            max-width: 900px;
+            width: 95%;
+        }
+
+        .comp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .comp-card {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .comp-card h3 {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .comp-val {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .comp-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+        </svg>
+        EcoBuild<span>.ai</span>
+    </div>
+
+    <div class="header" style="position: relative;">
+        <h1>Your Projects</h1>
+        <p>Manage and track your construction projects</p>
+
+        <div style="position: absolute; right: 0; top: 0; display: flex; gap: 10px;">
+            <button id="btnCompare" onclick="toggleCompareMode()"
+                style="padding: 8px 16px; background: white; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 600; color: var(--secondary); display: flex; align-items: center; gap: 6px;">
+                <span>⚖️</span> Compare
+            </button>
+            <button id="btnSignOut" onclick="handleSignOut()"
+                style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                Sign Out
+            </button>
+        </div>
+
+        <div id="compareBar"
+            style="display: none; background: #fffbeb; border: 1px solid #fbbf24; padding: 10px 20px; border-radius: 8px; margin-top: 15px; align-items: center; justify-content: space-between;">
+            <span style="color: #92400e; font-weight: 600;">Select 2 projects to compare (<span
+                    id="compareCount">0</span>/2)</span>
+            <button onclick="showComparison()" id="btnShowComp" disabled
+                style="padding: 6px 16px; background: #fbbf24; color: #78350f; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; opacity: 0.5;">
+                View Comparison
+            </button>
+        </div>
+    </div>
+
+    <div class="grid" id="projectGrid">
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2 id="modalTitle">Create New Project</h2>
+            <input type="hidden" id="editIndex" value="-1">
+
+            <div class="form-group">
+                <label for="projectName">Project Name</label>
+                <input type="text" id="projectName" placeholder="e.g. Skyline Tower">
+            </div>
+
+            <div class="form-group">
+                <label for="projectCity">City</label>
+                <select id="projectCity">
+                    <option value="" disabled selected>Choose a city...</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Bengaluru">Bengaluru</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Kolkata">Kolkata</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Ahmedabad">Ahmedabad</option>
+                    <option value="Noida">Noida</option>
+                    <option value="Gurugram">Gurugram</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="projectType">Project Type</label>
+                <select id="projectType">
+                    <option value="Residential">Residential</option>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Industrial">Industrial</option>
+                </select>
+            </div>
+
+            <button class="btn-submit" id="btnSave" onclick="saveProject()">LES GOO 🚀</button>
+            <button class="btn-delete hidden" id="btnDelete" onclick="deleteProject()">Delete</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="compOverlay">
+        <div class="modal comparison-modal">
+            <h2 id="compTitle"
+                style="text-align: center; border-bottom: 2px dashed var(--border); padding-bottom: 1rem;">Comparison
+                Results</h2>
+
+            <div id="compContent"></div>
+
+            <button class="btn-submit" onclick="closeComp()" style="margin-top: 2rem;">Close Comparison</button>
+        </div>
+    </div>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+
+    <script>
+        const totalBoxes = 6;
+        let projects = [];
+        let user = null;
+
+        // Init & Auth Check
+        window.onload = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'EcoBuildAuth.html';
+                return;
+            }
+            user = session.user;
+            await fetchProjects();
+        };
+
+        // Fetch Projects
+        async function fetchProjects() {
+            const { data, error } = await supabase
+                .from('projects')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching projects:", error);
+            } else {
+                projects = data || [];
+                renderBoxes();
+            }
+        }
+
+        // --- Comparison Logic ---
+        let isCompareMode = false;
+        let selectedForCompare = [];
+
+        function toggleCompareMode() {
+            isCompareMode = !isCompareMode;
+            selectedForCompare = [];
+
+            const btn = document.getElementById('btnCompare');
+            const bar = document.getElementById('compareBar');
+            const body = document.body;
+
+            if (isCompareMode) {
+                btn.style.background = '#fbbf24';
+                btn.style.color = '#78350f';
+                btn.innerHTML = '<span>❌</span> Cancel';
+                bar.style.display = 'flex';
+                body.classList.add('compare-active');
+            } else {
+                btn.style.background = 'white';
+                btn.style.color = 'var(--secondary)';
+                btn.innerHTML = '<span>⚖️</span> Compare';
+                bar.style.display = 'none';
+                body.classList.remove('compare-active');
+            }
+            renderBoxes(); // Re-render to clear selections/handlers
+        }
+
+        function updateCompareSelection() {
+            document.getElementById('compareCount').innerText = selectedForCompare.length;
+            const btn = document.getElementById('btnShowComp');
+            if (selectedForCompare.length === 2) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            }
+            renderBoxes();
+        }
+
+        function showComparison() {
+            if (selectedForCompare.length !== 2) return;
+
+            const p1 = projects.find(p => p.id === selectedForCompare[0]);
+            const p2 = projects.find(p => p.id === selectedForCompare[1]);
+
+            const p1Data = p1.analysis_result?.rule_based || { overall_score: 0, final_pollution: { 'PM2.5': 0 } };
+            const p2Data = p2.analysis_result?.rule_based || { overall_score: 0, final_pollution: { 'PM2.5': 0 } };
+
+            // Metrics
+            const m1 = {
+                score: Math.round(100 - p1Data.overall_score),
+                pm25: p1Data.final_pollution['PM2.5'],
+                water: p1.input_data?.daily_water_m3 || 0,
+                veh: p1.input_data?.vehicles_per_day || 0
+            };
+            const m2 = {
+                score: Math.round(100 - p2Data.overall_score),
+                pm25: p2Data.final_pollution['PM2.5'],
+                water: p2.input_data?.daily_water_m3 || 0,
+                veh: p2.input_data?.vehicles_per_day || 0
+            };
+
+            const html = `
+                <div class="comp-grid" style="align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem;">
+                    <div style="text-align: center;">
+                        <h3 style="color: var(--primary); font-size: 1.4rem;">${p1.project_name}</h3>
+                        <div class="project-type-badge">${p1.input_data?.project_type}</div>
+                    </div>
+                    <div style="font-weight: 700; color: var(--muted);">METRIC</div>
+                    <div style="text-align: center;">
+                        <h3 style="color: #f59e0b; font-size: 1.4rem;">${p2.project_name}</h3>
+                        <div class="project-type-badge">${p2.input_data?.project_type}</div>
+                    </div>
+                </div>
+
+                <!-- Score -->
+                <div class="comp-grid">
+                    <div class="comp-val">${m1.score}/100</div>
+                    <div class="comp-label">Sustainability Score</div>
+                    <div class="comp-val">${m2.score}/100</div>
+                </div>
+
+                <!-- PM2.5 -->
+                <div class="comp-grid">
+                    <div class="comp-val">${m1.pm25}</div>
+                    <div class="comp-label">PM2.5 (µg/m³)</div>
+                    <div class="comp-val">${m2.pm25}</div>
+                </div>
+
+                 <!-- Water -->
+                <div class="comp-grid">
+                    <div class="comp-val">${m1.water}</div>
+                    <div class="comp-label">Water Usage (m³)</div>
+                    <div class="comp-val">${m2.water}</div>
+                </div>
+
+                  <!-- Vehicles -->
+                <div class="comp-grid">
+                    <div class="comp-val">${m1.veh}</div>
+                    <div class="comp-label">Vehicles / Day</div>
+                    <div class="comp-val">${m2.veh}</div>
+                </div>
+            `;
+
+            document.getElementById('compContent').innerHTML = html;
+            document.getElementById('compOverlay').classList.add('active');
+        }
+
+        function closeComp() {
+            document.getElementById('compOverlay').classList.remove('active');
+        }
+
+        async function handleSignOut() {
+            await supabase.auth.signOut();
+            window.location.href = 'EcoBuildAuth.html';
+        }
+
+        // --- Modified Render to handle Compare Mode ---
+        function renderBoxes() {
+            const grid = document.getElementById('projectGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < totalBoxes; i++) {
+                const project = projects[i];
+                const isNextEmpty = i === projects.length;
+
+                const box = document.createElement('div');
+                box.className = 'box';
+
+                if (project) {
+                    box.className += ' filled';
+                    const isSelected = selectedForCompare.includes(project.id);
+                    if (isSelected) box.className += ' selected-for-compare';
+
+                    box.onclick = function () {
+                        if (isCompareMode) {
+                            // Toggle Selection
+                            if (isSelected) {
+                                selectedForCompare = selectedForCompare.filter(id => id !== project.id);
+                            } else {
+                                if (selectedForCompare.length < 2) {
+                                    selectedForCompare.push(project.id);
+                                } else {
+                                    alert("You can only compare 2 projects!");
+                                }
+                            }
+                            updateCompareSelection();
+                            return;
+                        }
+
+                        // Normal Click
+                        localStorage.setItem('currentProjectId', project.id);
+                        localStorage.setItem('currentProjectName', project.project_name);
+
+                        if (project.analysis_result && Object.keys(project.analysis_result).length > 0) {
+                            localStorage.setItem('analysisResult', JSON.stringify(project.analysis_result));
+                            window.location.href = 'EcoBuildOutput.html';
+                        } else {
+                            window.location.href = 'EcoBuildInput.html';
+                        }
+                    };
+
+                    box.innerHTML = `
+                        ${!isCompareMode ? `
+                        <button class="edit-btn-card" title="Edit" onclick="event.stopPropagation(); openEditModal(${i})">
+                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <button class="delete-btn-card" title="Delete" onclick="event.stopPropagation(); deleteProjectDirectly(${i})">
+                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>` : ''}
+                        
+                        <div>
+                            <h3>${escapeHtml(project.project_name)}</h3>
+                            <div class="project-type-badge">${escapeHtml(project.input_data?.project_type || 'General')}</div>
+                            <p>${escapeHtml(project.city || '')}</p>
+                        </div>
+                        ${!isCompareMode ? '<span class="view-link">Click to view →</span>' : ''}
+                    `;
+                } else if (isNextEmpty && !isCompareMode) {
+                    // Only show add new if NOT in compare mode
+                    box.className += ' add-new';
+                    box.onclick = openCreateModal;
+                    box.innerHTML = `
+                        <div class="plus-circle">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </div>
+                        <span class="add-text">Add New Project</span>
+                    `;
+                } else {
+                    box.className += ' empty';
+                    box.innerHTML = `<span>${isCompareMode ? '' : 'Available Slot'}</span>`;
+                }
+
+                grid.appendChild(box);
+            }
+        }
+
+
+        // Modal Logic
+        function openCreateModal() {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('modalTitle').innerText = 'Create New Project';
+            document.getElementById('btnSave').innerText = 'LES GOO 🚀';
+            document.getElementById('btnDelete').classList.add('hidden');
+
+            document.getElementById('editIndex').value = '-1';
+            document.getElementById('projectName').value = '';
+            document.getElementById('projectType').value = 'Residential';
+            document.getElementById('projectCity').value = '';
+
+            document.getElementById('projectName').focus();
+        }
+
+        function openEditModal(index) {
+            const project = projects[index];
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('modalTitle').innerText = 'Edit Project';
+            document.getElementById('btnSave').innerText = 'Update';
+            document.getElementById('btnDelete').classList.remove('hidden');
+
+            document.getElementById('editIndex').value = index;
+            document.getElementById('projectName').value = project.project_name;
+            document.getElementById('projectType').value = project.input_data?.project_type || 'Residential';
+            document.getElementById('projectCity').value = project.city;
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        async function saveProject() {
+            const index = parseInt(document.getElementById('editIndex').value);
+            const name = document.getElementById('projectName').value.trim();
+            const type = document.getElementById('projectType').value;
+            const city = document.getElementById('projectCity').value;
+
+            if (!name || !city) {
+                alert("Project Name and City are required!");
+                return;
+            }
+
+            const btn = document.getElementById('btnSave');
+            btn.innerText = "Savng...";
+            btn.disabled = true;
+
+            try {
+                if (index === -1) {
+                    // CREATE
+                    const { data, error } = await supabase.from('projects').insert([{
+                        user_id: user.id,
+                        project_name: name,
+                        project_type: type || "Residential",
+                        city: city,
+                        input_data: {}, // Defaults
+                        analysis_result: {}
+                    }]).select();
+
+                    if (error) throw error;
+                    await fetchProjects();
+                } else {
+                    // UPDATE
+                    const projectId = projects[index].id;
+                    const { error } = await supabase.from('projects').update({
+                        project_name: name,
+                        project_type: type,
+                        city: city
+                    }).eq('id', projectId);
+
+                    if (error) throw error;
+                    await fetchProjects();
+                }
+                closeModal();
+            } catch (err) {
+                alert("Error saving project: " + err.message);
+            } finally {
+                btn.innerText = "LES GOO 🚀";
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteProject() {
+            if (!confirm("Are you sure?")) return;
+
+            const index = parseInt(document.getElementById('editIndex').value);
+            const projectId = projects[index].id;
+
+            const { error } = await supabase.from('projects').delete().eq('id', projectId);
+            if (error) {
+                alert("Error deleting: " + error.message);
+            } else {
+                await fetchProjects();
+                closeModal();
+            }
+        }
+
+        async function deleteProjectDirectly(index) {
+            if (!confirm("Are you sure you want to delete '" + projects[index].project_name + "'?")) return;
+
+            const projectId = projects[index].id;
+            const { error } = await supabase.from('projects').delete().eq('id', projectId);
+
+            if (error) {
+                alert("Error deleting: " + error.message);
+            } else {
+                await fetchProjects();
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // --- ENTER KEY LISTENER ---
+        document.getElementById('projectName').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') saveProject();
+        });
+
+
+
+
+
+        renderBoxes();
+    </script>
+
+</body>
+
+</html>
