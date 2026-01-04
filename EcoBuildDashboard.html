@@ -584,6 +584,120 @@
                 renderBoxes();
             }
         }
+
+        // --- Comparison Logic ---
+        let isCompareMode = false;
+        let selectedForCompare = [];
+
+        function toggleCompareMode() {
+            isCompareMode = !isCompareMode;
+            selectedForCompare = [];
+
+            const btn = document.getElementById('btnCompare');
+            const bar = document.getElementById('compareBar');
+            const body = document.body;
+
+            if (isCompareMode) {
+                btn.style.background = '#fbbf24';
+                btn.style.color = '#78350f';
+                btn.innerHTML = '<span>❌</span> Cancel';
+                bar.style.display = 'flex';
+                body.classList.add('compare-active');
+            } else {
+                btn.style.background = 'white';
+                btn.style.color = 'var(--secondary)';
+                btn.innerHTML = '<span>⚖️</span> Compare';
+                bar.style.display = 'none';
+                body.classList.remove('compare-active');
+            }
+            renderBoxes(); // Re-render to clear selections/handlers
+        }
+
+        function updateCompareSelection() {
+            document.getElementById('compareCount').innerText = selectedForCompare.length;
+            const btn = document.getElementById('btnShowComp');
+            if (selectedForCompare.length === 2) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            }
+            renderBoxes();
+        }
+
+        function showComparison() {
+            if (selectedForCompare.length !== 2) return;
+
+            const p1 = projects.find(p => p.id === selectedForCompare[0]);
+            const p2 = projects.find(p => p.id === selectedForCompare[1]);
+
+            const p1Data = p1.analysis_result?.rule_based || { overall_score: 0, final_pollution: { 'PM2.5': 0 } };
+            const p2Data = p2.analysis_result?.rule_based || { overall_score: 0, final_pollution: { 'PM2.5': 0 } };
+
+            // Metrics
+            const m1 = {
+                score: Math.round(100 - p1Data.overall_score),
+                pm25: p1Data.final_pollution['PM2.5'],
+                water: p1.input_data?.daily_water_m3 || 0,
+                veh: p1.input_data?.vehicles_per_day || 0
+            };
+            const m2 = {
+                score: Math.round(100 - p2Data.overall_score),
+                pm25: p2Data.final_pollution['PM2.5'],
+                water: p2.input_data?.daily_water_m3 || 0,
+                veh: p2.input_data?.vehicles_per_day || 0
+            };
+
+            const html = `
+                <div class="comp-grid" style="align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem;">
+                    <div style="text-align: center;">
+                        <h3 style="color: var(--primary); font-size: 1.4rem;">${p1.project_name}</h3>
+                        <div class="project-type-badge">${p1.input_data?.project_type}</div>
+                    </div>
+                    <div style="font-weight: 700; color: var(--muted);">METRIC</div>
+                    <div style="text-align: center;">
+                        <h3 style="color: #f59e0b; font-size: 1.4rem;">${p2.project_name}</h3>
+                        <div class="project-type-badge">${p2.input_data?.project_type}</div>
+                    </div>
+                </div>
+
+                <!-- Score -->
+                <div class="comp-grid">
+                    <div class="comp-val">${m1.score}/100</div>
+                    <div class="comp-label">Sustainability Score</div>
+                    <div class="comp-val">${m2.score}/100</div>
+                </div>
+
+                <!-- PM2.5 -->
+                <div class="comp-grid">
+                    <div class="comp-val">${m1.pm25}</div>
+                    <div class="comp-label">PM2.5 (µg/m³)</div>
+                    <div class="comp-val">${m2.pm25}</div>
+                </div>
+
+                 <!-- Water -->
+                <div class="comp-grid">
+                    <div class="comp-val">${m1.water}</div>
+                    <div class="comp-label">Water Usage (m³)</div>
+                    <div class="comp-val">${m2.water}</div>
+                </div>
+
+                  <!-- Vehicles -->
+                <div class="comp-grid">
+                    <div class="comp-val">${m1.veh}</div>
+                    <div class="comp-label">Vehicles / Day</div>
+                    <div class="comp-val">${m2.veh}</div>
+                </div>
+            `;
+
+            document.getElementById('compContent').innerHTML = html;
+            document.getElementById('compOverlay').classList.add('active');
+        }
+
+        function closeComp() {
+            document.getElementById('compOverlay').classList.remove('active');
+        }
         // ...
         async function handleSignOut() {
             await supabaseClient.auth.signOut();
