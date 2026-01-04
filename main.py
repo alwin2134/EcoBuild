@@ -350,7 +350,7 @@ def analyze_location_proximity(city: str):
     }
 
 # Serve Frontend (Must be last to avoid shadowing API routes)
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+app.mount("/", StaticFiles(directory=".", html=False), name="static")
 
 if __name__ == "__main__":
     import uvicorn
