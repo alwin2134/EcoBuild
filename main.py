@@ -48,7 +48,7 @@ def health_check():
 
 @app.get("/")
 async def read_root():
-    return FileResponse('EcoBuild.html')
+    return FileResponse('index.html')
 
 # --- UTILS ---
 def haversine(lon1, lat1, lon2, lat2):
@@ -350,7 +350,19 @@ def analyze_location_proximity(city: str):
     }
 
 # Serve Frontend (Must be last to avoid shadowing API routes)
-app.mount("/", StaticFiles(directory=".", html=False), name="static")
+# Serve Static Assets explicitly
+app.mount("/js", StaticFiles(directory="js"), name="js")
+app.mount("/asset", StaticFiles(directory="asset"), name="asset")
+
+# Serve specific HTML files from root (Whitelist approach for security)
+@app.get("/{filename}.html")
+async def read_html(filename: str):
+    file_path = f"{filename}.html"
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
+    raise HTTPException(status_code=404, detail="File not found")
+
+# Note: We do NOT mount root "/" to ".". This prevents accessing main.py source code.
 
 if __name__ == "__main__":
     import uvicorn
