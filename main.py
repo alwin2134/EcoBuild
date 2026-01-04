@@ -12,9 +12,11 @@ from math import radians, cos, sin, asin, sqrt
 from models import UserInput, EnrichedProjectInput, ImpactResult, MLPrediction, BlueprintResult
 from blueprint_utils import analyze_blueprint
 
-app = FastAPI(title="EIA EcoBuild Engine")
+from fastapi.responses import FileResponse
 
 # Force Reload for Model Update
+
+app = FastAPI(title="EIA EcoBuild Engine")
 
 # CORS for local frontend
 app.add_middleware(
@@ -40,9 +42,13 @@ except Exception as e:
     SENSITIVE_LOCS = None
     CITIES_DB = None
 
-@app.get("/")
+@app.get("/api/health")
 def health_check():
     return {"status": "online", "system": "EIA EcoBuild Engine"}
+
+@app.get("/")
+async def read_root():
+    return FileResponse('EcoBuild.html')
 
 # --- UTILS ---
 def haversine(lon1, lat1, lon2, lat2):

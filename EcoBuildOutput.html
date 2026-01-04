@@ -615,7 +615,14 @@
             window.print();
         }
 
-        window.onload = function () {
+        window.onload = async function () {
+            // 0. Auth Check
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = 'EcoBuildAuth.html';
+                return;
+            }
+
             // Load Data
             const raw = localStorage.getItem('analysisResult');
             if (!raw) {

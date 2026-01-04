@@ -517,7 +517,7 @@
                 }
             }
 
-                = await supabase.auth.getSession();
+                = await supabaseClient.auth.getSession();
 
             if (!session) {
                 window.location.href = 'EcoBuildAuth.html';
@@ -543,7 +543,7 @@
                 data: projectData, error
             }
 
-                = await supabase.from('projects').select('*').eq('id', currentProjectId).single();
+                = await supabaseClient.from('projects').select('*').eq('id', currentProjectId).single();
 
             if (projectData) {
                 const display = document.getElementById('projectNameDisplay');
