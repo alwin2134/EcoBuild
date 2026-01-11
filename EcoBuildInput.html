@@ -486,7 +486,7 @@
                 land_area_m2: 2500,
                 built_up_area_m2: 12000,
                 distance_to_residential_m: 150,
-                distance_to_water_body_km: 1.2,
+                distance_to_water_body_km: 1,
                 floors: 12,
                 rooms: 48,
                 daily_water_m3: 45,
@@ -545,32 +545,52 @@
             }
 
             // Fetch Project Details from Supabase to pre-fill Context
-            const {
-                data: projectData, error
-            }
-
-                = await supabaseClient.from('projects').select('*').eq('id', currentProjectId).single();
-
-            if (projectData) {
-                const display = document.getElementById('projectNameDisplay');
-                if (display) display.innerText = "Inputs for: " + projectData.project_name;
-
-                // Populate Geography Context
-                document.getElementById('displayCity').value = projectData.city || "Unknown";
-                document.getElementById('hiddenCity').value = projectData.city;
-
-                document.getElementById('displayType').value = projectData.project_type || "Residential";
-                document.getElementById('hiddenType').value = projectData.project_type || "Residential";
-
-                // Pre-fill other inputs if they exist in input_data
-                if (projectData.input_data) {
-                    const inputs = projectData.input_data;
-
-                    for (const [key, value] of Object.entries(inputs)) {
-                        const el = document.querySelector(`[name="${key}"]`);
-                        if (el && key !== 'city' && key !== 'project_type') el.value = value;
-                    }
+            try {
+                const {
+                    data: projectData, error
                 }
+
+                    = await supabaseClient.from('projects').select('*').eq('id', currentProjectId).single();
+
+                if (error) {
+                    console.error("Error fetching project:", error);
+                    alert("Error loading project data: " + error.message);
+                    return;
+                }
+
+                if (projectData) {
+                    console.log("Project data loaded:", projectData);
+
+                    const display = document.getElementById('projectNameDisplay');
+                    if (display) display.innerText = "Inputs for: " + projectData.project_name;
+
+                    // Populate Geography Context
+                    const displayCity = document.getElementById('displayCity');
+                    const hiddenCity = document.getElementById('hiddenCity');
+                    const displayType = document.getElementById('displayType');
+                    const hiddenType = document.getElementById('hiddenType');
+
+                    if (displayCity) displayCity.value = projectData.city || "Unknown";
+                    if (hiddenCity) hiddenCity.value = projectData.city || "";
+
+                    if (displayType) displayType.value = projectData.project_type || "Residential";
+                    if (hiddenType) hiddenType.value = projectData.project_type || "Residential";
+
+                    // Pre-fill other inputs if they exist in input_data
+                    if (projectData.input_data) {
+                        const inputs = projectData.input_data;
+
+                        for (const [key, value] of Object.entries(inputs)) {
+                            const el = document.querySelector(`[name="${key}"]`);
+                            if (el && key !== 'city' && key !== 'project_type') el.value = value;
+                        }
+                    }
+                } else {
+                    console.warn("No project data found for ID:", currentProjectId);
+                }
+            } catch (err) {
+                console.error("Exception fetching project:", err);
+                alert("Failed to load project: " + err.message);
             }
         }
 
