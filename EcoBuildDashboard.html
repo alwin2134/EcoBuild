@@ -844,7 +844,7 @@
             try {
                 if (index === -1) {
                     // CREATE
-                    const { data, error } = await supabase.from('projects').insert([{
+                    const { data, error } = await supabaseClient.from('projects').insert([{
                         user_id: user.id,
                         project_name: name,
                         project_type: type || "Residential",
@@ -858,7 +858,7 @@
                 } else {
                     // UPDATE
                     const projectId = projects[index].id;
-                    const { error } = await supabase.from('projects').update({
+                    const { error } = await supabaseClient.from('projects').update({
                         project_name: name,
                         project_type: type,
                         city: city
@@ -882,7 +882,7 @@
             const index = parseInt(document.getElementById('editIndex').value);
             const projectId = projects[index].id;
 
-            const { error } = await supabase.from('projects').delete().eq('id', projectId);
+            const { error } = await supabaseClient.from('projects').delete().eq('id', projectId);
             if (error) {
                 alert("Error deleting: " + error.message);
             } else {
@@ -895,7 +895,7 @@
             if (!confirm("Are you sure you want to delete '" + projects[index].project_name + "'?")) return;
 
             const projectId = projects[index].id;
-            const { error } = await supabase.from('projects').delete().eq('id', projectId);
+            const { error } = await supabaseClient.from('projects').delete().eq('id', projectId);
 
             if (error) {
                 alert("Error deleting: " + error.message);
