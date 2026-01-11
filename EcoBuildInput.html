@@ -652,7 +652,26 @@
                         method: 'POST',
                         body: formData
                     });
-                    const result = await res.json();
+
+                    // Check if response is ok
+                    if (!res.ok) {
+                        throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+                    }
+
+                    // Check if response has content
+                    const text = await res.text();
+                    if (!text) {
+                        throw new Error('Server returned empty response');
+                    }
+
+                    // Try to parse JSON
+                    let result;
+                    try {
+                        result = JSON.parse(text);
+                    } catch (jsonError) {
+                        console.error('Invalid JSON response:', text);
+                        throw new Error('Server returned invalid JSON');
+                    }
 
                     if (result.success) {
                         uploadedBlueprintData = result.data;
@@ -667,8 +686,8 @@
                 }
 
                 catch (e) {
-                    console.error(e);
-                    document.getElementById('bpStatus').innerText = "❌ Server Error";
+                    console.error('Blueprint upload error:', e);
+                    document.getElementById('bpStatus').innerText = "❌ " + e.message;
                     document.getElementById('bpStatus').style.color = 'red';
                 }
             }
