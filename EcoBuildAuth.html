@@ -486,10 +486,13 @@
     <script src="js/config.js"></script>
 
     <script>
-        // Ensure API_BASE_URL is defined (fallback if config.js hasn't loaded yet)
-        const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:8000'
-            : window.location.origin);
+        // Ensure API_BASE_URL is available from config.js
+        if (!window.API_BASE_URL) {
+            window.API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:8000'
+                : window.location.origin;
+        }
+        const API_BASE_URL = window.API_BASE_URL;
 
         // Check if already logged in
         window.onload = async () => {
