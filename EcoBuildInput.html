@@ -614,17 +614,13 @@
             if (files.length > 0) {
                 const file = files[0];
 
-                fileList.innerHTML = `<strong>Selected:</strong>$ {
-                    file.name
-                }
-
-                <span id="bpStatus">(Analyzing...)</span>`;
+                fileList.innerHTML = `\u003cstrong\u003eSelected:\u003c/strong\u003e ${file.name} \u003cspan id=\"bpStatus\"\u003e(Analyzing...)\u003c/span\u003e`;
 
                 const formData = new FormData();
                 formData.append('file', file);
 
                 try {
-                    const res = await fetch('http://localhost:8000/analyze-blueprint', {
+                    const res = await fetch(`${API_BASE_URL}/analyze-blueprint`, {
                         method: 'POST',
                         body: formData
                     });
@@ -760,7 +756,7 @@
             try {
 
                 // 1. Calculate Rule Based Impact
-                const impactRes = await fetch('http://localhost:8000/calculate-impact', {
+                const impactRes = await fetch(`${API_BASE_URL}/calculate-impact`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(inputData)
@@ -769,7 +765,7 @@
                 const impactData = await impactRes.json();
 
                 // 2. ML Prediction
-                const mlRes = await fetch('http://localhost:8000/predict-impact-ml', {
+                const mlRes = await fetch(`${API_BASE_URL}/predict-impact-ml`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(inputData)
@@ -778,7 +774,7 @@
                 const mlData = await mlRes.json();
 
                 // 3. Location Analysis (Via City Name)
-                const locRes = await fetch(`http://localhost:8000/analyze-location?city=${encodeURIComponent(inputData.city)}`);
+                const locRes = await fetch(`${API_BASE_URL}/analyze-location?city=${encodeURIComponent(inputData.city)}`);
                 if (!locRes.ok) throw new Error(`Location Analysis Failed: ${await locRes.text()}`);
                 const locData = await locRes.json();
 
@@ -799,7 +795,7 @@
                         error: dbError
                     }
 
-                        = await supabase.from('projects').update({
+                        = await supabaseClient.from('projects').update({
                             input_data: fullResult.input,
                             analysis_result: fullResult,
                             overall_score: impactData.overall_score,

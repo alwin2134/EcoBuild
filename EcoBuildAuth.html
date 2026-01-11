@@ -539,9 +539,8 @@
 
         // 3. Google OAuth
         async function handleGoogleLogin() {
-            // Using explicit localhost:8000 since we are now serving the app from the backend
-            // This is safer than window.location.origin if the user opens the file directly
-            const redirectUrl = 'http://localhost:8000/EcoBuildDashboard.html';
+            // Use dynamic redirect URL that works for both local and production
+            const redirectUrl = `${API_BASE_URL}/EcoBuildDashboard.html`;
 
             const { data, error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
