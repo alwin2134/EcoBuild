@@ -478,7 +478,6 @@
                 ? 'http://localhost:8000'
                 : window.location.origin;
         }
-        const API_BASE_URL = window.API_BASE_URL;
 
         let user = null;
         let currentProjectId = null;
@@ -649,7 +648,7 @@
                 formData.append('file', file);
 
                 try {
-                    const res = await fetch(`${API_BASE_URL}/analyze-blueprint`, {
+                    const res = await fetch(`${window.API_BASE_URL}/analyze-blueprint`, {
                         method: 'POST',
                         body: formData
                     });
@@ -785,7 +784,7 @@
             try {
 
                 // 1. Calculate Rule Based Impact
-                const impactRes = await fetch(`${API_BASE_URL}/calculate-impact`, {
+                const impactRes = await fetch(`${window.API_BASE_URL}/calculate-impact`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(inputData)
@@ -794,7 +793,7 @@
                 const impactData = await impactRes.json();
 
                 // 2. ML Prediction
-                const mlRes = await fetch(`${API_BASE_URL}/predict-impact-ml`, {
+                const mlRes = await fetch(`${window.API_BASE_URL}/predict-impact-ml`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(inputData)
@@ -803,7 +802,7 @@
                 const mlData = await mlRes.json();
 
                 // 3. Location Analysis (Via City Name)
-                const locRes = await fetch(`${API_BASE_URL}/analyze-location?city=${encodeURIComponent(inputData.city)}`);
+                const locRes = await fetch(`${window.API_BASE_URL}/analyze-location?city=${encodeURIComponent(inputData.city)}`);
                 if (!locRes.ok) throw new Error(`Location Analysis Failed: ${await locRes.text()}`);
                 const locData = await locRes.json();
 

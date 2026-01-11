@@ -492,7 +492,6 @@
                 ? 'http://localhost:8000'
                 : window.location.origin;
         }
-        const API_BASE_URL = window.API_BASE_URL;
 
         // Check if already logged in
         window.onload = async () => {
@@ -548,7 +547,7 @@
         // 3. Google OAuth
         async function handleGoogleLogin() {
             // Use dynamic redirect URL that works for both local and production
-            const redirectUrl = `${API_BASE_URL}/EcoBuildDashboard.html`;
+            const redirectUrl = `${window.API_BASE_URL}/EcoBuildDashboard.html`;
 
             const { data, error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
