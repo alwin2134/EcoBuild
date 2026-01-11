@@ -472,6 +472,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script> // 1. Supabase & Init
+        // Ensure API_BASE_URL is defined (fallback if config.js hasn't loaded yet)
+        const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8000'
+            : window.location.origin);
+
         let user = null;
         let currentProjectId = null;
 
