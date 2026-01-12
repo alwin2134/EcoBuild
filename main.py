@@ -180,183 +180,198 @@ async def upload_blueprint(file: UploadFile = File(...)):
 
 @app.post("/calculate-impact", response_model=ImpactResult)
 def calculate_impact(user_data: UserInput):
-    # Lookup Data
-    data = enrich_data(user_data)
-    
-    # 1. Physics Engine (Simplified)
-    # Added Pollution
-    added_pm25 = ((data.vehicles_per_day * 0.5) + (data.fuel_consumption_l_per_day * 2)) / 1000 # kg/day approx scaled
-    added_no2 = ((data.vehicles_per_day * 0.2) + (data.fuel_consumption_l_per_day * 20)) / 1000
-    
-    # Construction Dust
-    construction_dust = data.built_up_area_m2 * 0.0001 * (1 + (data.vegetation_removed_percent/100))
-    
-    # Final Concentrations (Box Model coeff = 50 for local)
-    final_pm25 = data.baseline_pm25 + (added_pm25 * 50)
-    final_no2 = data.baseline_no2 + (added_no2 * 50)
-    
-    # 2. Rule-Based Scoring (Lower is Better for Environment, but we want Score out of 100)
-    # Let's verify scoring: "Impact Score". High Impact = High Score.
-    # User Requirement: <=30 Low, 60+ High. So 0 is Good, 100 is Bad.
-    
-    # Air Score (0-100)
-    # AQI > 300 is bad. 
-    air_score = (final_pm25 / 250 * 50) + (final_no2 / 100 * 30) + (data.dg_hours_per_day * 2)
-    air_score = min(100, air_score)
-    
-    # Water Score
-    # 135 LPCD is standard.
-    # Total liters = data.daily_water_m3 * 1000
-    # Persons approx = rooms * 2
-    # Fix: 'rooms' is not in EnrichedInput, let's derive approx occupancy from water or area
-    # 10 sq m per person?
-    persons = max(1, data.built_up_area_m2 / 15) 
-    lpcd = (data.daily_water_m3 * 1000) / persons
-    
-    water_score = 0
-    if lpcd > 150: water_score += 40
-    if data.distance_to_water_body_km < 0.5: water_score += 40
-    if data.stp_present == 0: water_score += 20
-    if data.has_rainwater_harvesting == 1: water_score -= 10
-    water_score = max(0, min(100, water_score))
-    
-    # Waste Score
-    waste_score = (data.daily_waste_kg / 100 * 10) + (data.hazardous_waste_kg_per_month * 2)
-    if data.waste_segregation == 0: waste_score += 20
-    waste_score = min(100, waste_score)
-    
-    # Land/Bio Score
-    land_score = (data.vegetation_removed_percent) 
-    if data.near_sensitive_zone == 1: land_score += 40
-    if data.green_area_percent < 10: land_score += 20
-    land_score = min(100, land_score)
-    
-    # Noise Score
-    noise_score = data.avg_noise_db - 45 # Baseline silence
-    noise_score = max(0, noise_score * 2)
-    if data.distance_to_residential_m < 50: noise_score += 20
-    noise_score = min(100, noise_score)
-    
-    # Overall Score (Weighted)
-    # Weights: Air 30%, Water 25%, Land 20%, Waste 15%, Noise 10%
-    overall_score = (air_score * 0.3) + (water_score * 0.25) + (land_score * 0.2) + (waste_score * 0.15) + (noise_score * 0.10)
-    
-    # Recommendations
-    recs = []
-    if air_score > 50: recs.append("High Air Pollution risk: Install Air Purifiers and Smog Towers.")
-    if water_score > 50: recs.append("Critical Water usage: Mandate STP and Rainwater Harvesting.")
-    if land_score > 50: recs.append("High ecological impact: Increase Green Belt area > 30%.")
-    if data.has_solar == 0: recs.append("Energy: Install Solar Panels to reduce carbon footprint.")
-    if data.energy_efficient_lighting == 0: recs.append("Energy: Switch to LED lighting.")
+    try:
+        # Lookup Data
+        data = enrich_data(user_data)
+        
+        # 1. Physics Engine (Simplified)
+        # Added Pollution
+        added_pm25 = ((data.vehicles_per_day * 0.5) + (data.fuel_consumption_l_per_day * 2)) / 1000 # kg/day approx scaled
+        added_no2 = ((data.vehicles_per_day * 0.2) + (data.fuel_consumption_l_per_day * 20)) / 1000
+        
+        # Construction Dust
+        construction_dust = data.built_up_area_m2 * 0.0001 * (1 + (data.vegetation_removed_percent/100))
+        
+        # Final Concentrations (Box Model coeff = 50 for local)
+        final_pm25 = data.baseline_pm25 + (added_pm25 * 50)
+        final_no2 = data.baseline_no2 + (added_no2 * 50)
+        
+        # 2. Rule-Based Scoring (Lower is Better for Environment, but we want Score out of 100)
+        # Let's verify scoring: "Impact Score". High Impact = High Score.
+        # User Requirement: <=30 Low, 60+ High. So 0 is Good, 100 is Bad.
+        
+        # Air Score (0-100)
+        # AQI > 300 is bad. 
+        air_score = (final_pm25 / 250 * 50) + (final_no2 / 100 * 30) + (data.dg_hours_per_day * 2)
+        air_score = min(100, air_score)
+        
+        # Water Score
+        # 135 LPCD is standard.
+        # Total liters = data.daily_water_m3 * 1000
+        # Persons approx = rooms * 2
+        # Fix: 'rooms' is not in EnrichedInput, let's derive approx occupancy from water or area
+        # 10 sq m per person?
+        persons = max(1, data.built_up_area_m2 / 15) 
+        lpcd = (data.daily_water_m3 * 1000) / persons
+        
+        water_score = 0
+        if lpcd > 150: water_score += 40
+        if data.distance_to_water_body_km < 0.5: water_score += 40
+        if data.stp_present == 0: water_score += 20
+        if data.has_rainwater_harvesting == 1: water_score -= 10
+        water_score = max(0, min(100, water_score))
+        
+        # Waste Score
+        waste_score = (data.daily_waste_kg / 100 * 10) + (data.hazardous_waste_kg_per_month * 2)
+        if data.waste_segregation == 0: waste_score += 20
+        waste_score = min(100, waste_score)
+        
+        # Land/Bio Score
+        land_score = (data.vegetation_removed_percent) 
+        if data.near_sensitive_zone == 1: land_score += 40
+        if data.green_area_percent < 10: land_score += 20
+        land_score = min(100, land_score)
+        
+        # Noise Score
+        noise_score = data.avg_noise_db - 45 # Baseline silence
+        noise_score = max(0, noise_score * 2)
+        if data.distance_to_residential_m < 50: noise_score += 20
+        noise_score = min(100, noise_score)
+        
+        # Overall Score (Weighted)
+        # Weights: Air 30%, Water 25%, Land 20%, Waste 15%, Noise 10%
+        overall_score = (air_score * 0.3) + (water_score * 0.25) + (land_score * 0.2) + (waste_score * 0.15) + (noise_score * 0.10)
+        
+        # Recommendations
+        recs = []
+        if air_score > 50: recs.append("High Air Pollution risk: Install Air Purifiers and Smog Towers.")
+        if water_score > 50: recs.append("Critical Water usage: Mandate STP and Rainwater Harvesting.")
+        if land_score > 50: recs.append("High ecological impact: Increase Green Belt area > 30%.")
+        if data.has_solar == 0: recs.append("Energy: Install Solar Panels to reduce carbon footprint.")
+        if data.energy_efficient_lighting == 0: recs.append("Energy: Switch to LED lighting.")
 
-    # Class
-    imp_class = "Low"
-    if overall_score > 60: imp_class = "High"
-    elif overall_score > 30: imp_class = "Moderate"
+        # Class
+        imp_class = "Low"
+        if overall_score > 60: imp_class = "High"
+        elif overall_score > 30: imp_class = "Moderate"
 
-    return {
-        "overall_score": round(overall_score, 1),
-        "impact_class": imp_class,
-        "breakdown": {
-            "Air Impact": round(air_score, 1),
-            "Water Impact": round(water_score, 1),
-            "Land Impact": round(land_score, 1),
-            "Waste Impact": round(waste_score, 1),
-            "Noise Impact": round(noise_score, 1)
-        },
-        "added_pollution": {
-            "PM2.5": round(added_pm25, 4),
-            "NO2": round(added_no2, 4)
-        },
-        "final_pollution": {
-            "PM2.5": round(final_pm25, 2),
-            "NO2": round(final_no2, 2)
-        },
-        "recommendations": recs
-    }
+        return {
+            "overall_score": round(overall_score, 1),
+            "impact_class": imp_class,
+            "breakdown": {
+                "Air Impact": round(air_score, 1),
+                "Water Impact": round(water_score, 1),
+                "Land Impact": round(land_score, 1),
+                "Waste Impact": round(waste_score, 1),
+                "Noise Impact": round(noise_score, 1)
+            },
+            "added_pollution": {
+                "PM2.5": round(added_pm25, 4),
+                "NO2": round(added_no2, 4)
+            },
+            "final_pollution": {
+                "PM2.5": round(final_pm25, 2),
+                "NO2": round(final_no2, 2)
+            },
+            "recommendations": recs
+        }
+    except Exception as e:
+        print(f"Error in calculate_impact: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Impact calculation failed: {str(e)}")
 
 @app.post("/predict-impact-ml", response_model=MLPrediction)
 def predict_impact_ml(user_data: UserInput):
-    if ML_MODEL is None:
-        raise HTTPException(status_code=503, detail="ML Model not loaded")
-    
-    # Lookup
-    data = enrich_data(user_data)
-    
-    # Feature Engineering (Same as ml_train logic)
-     # Added Pollution (Replicated logic)
-    added_pm25 = ((data.vehicles_per_day * 0.5) + (data.fuel_consumption_l_per_day * 2)) / 1000 
-    added_no2 = ((data.vehicles_per_day * 0.2) + (data.fuel_consumption_l_per_day * 20)) / 1000
-    construction_dust = data.built_up_area_m2 * 0.0001 * (1 + (data.vegetation_removed_percent/100))
-    final_pm25 = data.baseline_pm25 + (added_pm25 * 50)
-    final_no2 = data.baseline_no2 + (added_no2 * 50)
-    
-    # Fill remaining physics variables with defaults for ML stability if needed, simplified here:
-    final_so2 = data.baseline_so2 
-    final_co = data.baseline_co
-    
-    # Feature Vector
-    # Must match training order:
-    # 'land_area_m2', 'built_up_area_m2', 'floors', 'daily_water_m3', 
-    # 'daily_waste_kg', 'hazardous_waste_kg_per_month', 'avg_noise_db', 
-    # 'distance_to_residential_m', 'vegetation_removed_percent', 
-    # 'near_sensitive_zone', 'vehicles_per_day', 'fuel_consumption_l_per_day',
-    # 'final_pm25', 'final_no2', 'final_so2', 'final_co'
-    
-    features = [[
-        data.land_area_m2, data.built_up_area_m2, data.floors, data.daily_water_m3,
-        data.daily_waste_kg, data.hazardous_waste_kg_per_month, data.avg_noise_db,
-        data.distance_to_residential_m, data.vegetation_removed_percent,
-        data.near_sensitive_zone, data.vehicles_per_day, data.fuel_consumption_l_per_day,
-        final_pm25, final_no2, final_so2, final_co
-    ]]
-    
-    pred_class = ML_MODEL.predict(features)[0]
-    probs = ML_MODEL.predict_proba(features)[0]
-    confidence = max(probs)
-    
-    labels = {0: "Low", 1: "Moderate", 2: "High"}
-    
-    return {
-        "predicted_class": int(pred_class),
-        "label": labels.get(int(pred_class), "Unknown"),
-        "confidence": round(float(confidence) * 100, 2)
-    }
+    try:
+        if ML_MODEL is None:
+            raise HTTPException(status_code=503, detail="ML Model not loaded")
+        
+        # Lookup
+        data = enrich_data(user_data)
+        
+        # Feature Engineering (Same as ml_train logic)
+         # Added Pollution (Replicated logic)
+        added_pm25 = ((data.vehicles_per_day * 0.5) + (data.fuel_consumption_l_per_day * 2)) / 1000 
+        added_no2 = ((data.vehicles_per_day * 0.2) + (data.fuel_consumption_l_per_day * 20)) / 1000
+        construction_dust = data.built_up_area_m2 * 0.0001 * (1 + (data.vegetation_removed_percent/100))
+        final_pm25 = data.baseline_pm25 + (added_pm25 * 50)
+        final_no2 = data.baseline_no2 + (added_no2 * 50)
+        
+        # Fill remaining physics variables with defaults for ML stability if needed, simplified here:
+        final_so2 = data.baseline_so2 
+        final_co = data.baseline_co
+        
+        # Feature Vector
+        # Must match training order:
+        # 'land_area_m2', 'built_up_area_m2', 'floors', 'daily_water_m3', 
+        # 'daily_waste_kg', 'hazardous_waste_kg_per_month', 'avg_noise_db', 
+        # 'distance_to_residential_m', 'vegetation_removed_percent', 
+        # 'near_sensitive_zone', 'vehicles_per_day', 'fuel_consumption_l_per_day',
+        # 'final_pm25', 'final_no2', 'final_so2', 'final_co'
+        
+        features = [[
+            data.land_area_m2, data.built_up_area_m2, data.floors, data.daily_water_m3,
+            data.daily_waste_kg, data.hazardous_waste_kg_per_month, data.avg_noise_db,
+            data.distance_to_residential_m, data.vegetation_removed_percent,
+            data.near_sensitive_zone, data.vehicles_per_day, data.fuel_consumption_l_per_day,
+            final_pm25, final_no2, final_so2, final_co
+        ]]
+        
+        pred_class = ML_MODEL.predict(features)[0]
+        probs = ML_MODEL.predict_proba(features)[0]
+        confidence = max(probs)
+        
+        labels = {0: "Low", 1: "Moderate", 2: "High"}
+        
+        return {
+            "predicted_class": int(pred_class),
+            "label": labels.get(int(pred_class), "Unknown"),
+            "confidence": round(float(confidence) * 100, 2)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in predict_impact_ml: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"ML prediction failed: {str(e)}")
 
 @app.get("/analyze-location")
 def analyze_location_proximity(city: str):
-    # Just return City Center info + Nearest sensitive zone to city center
-    if CITIES_DB is None: return {"nearest_location": "Unknown", "distance_km": 0, "risk": "Unknown"}
-    
-    match = CITIES_DB[CITIES_DB['city_lower'] == city.lower()]
-    if match.empty:
-         return {"nearest_location": "City Not Found", "distance_km": 0, "risk": "Unknown"}
-         
-    city_data = match.iloc[0]
-    lat, lng = city_data['latitude'], city_data['longitude']
-    
-    if SENSITIVE_LOCS is None:
-          return {"nearest_location": "Unknown", "distance_km": 0, "risk": "Unknown"}
-    
-    min_dist = float('inf')
-    nearest = None
-    
-    for idx, row in SENSITIVE_LOCS.iterrows():
-        dist = haversine(lng, lat, row['lng'], row['lat'])
-        if dist < min_dist:
-            min_dist = dist
-            nearest = row
-            
-    risk = "Low"
-    if min_dist < 2.0: risk = "High"
-    elif min_dist < 10.0: risk = "Moderate" # Larger buffer for city-level
-    
-    return {
-        "nearest_location": nearest['name'],
-        "type": nearest['category'],
-        "distance_km": round(min_dist, 2),
-        "risk": risk
-    }
+    try:
+        # Just return City Center info + Nearest sensitive zone to city center
+        if CITIES_DB is None: 
+            return {"nearest_location": "Unknown", "distance_km": 0, "risk": "Unknown"}
+        
+        match = CITIES_DB[CITIES_DB['city_lower'] == city.lower()]
+        if match.empty:
+             return {"nearest_location": "City Not Found", "distance_km": 0, "risk": "Unknown"}
+             
+        city_data = match.iloc[0]
+        lat, lng = city_data['latitude'], city_data['longitude']
+        
+        if SENSITIVE_LOCS is None:
+              return {"nearest_location": "Unknown", "distance_km": 0, "risk": "Unknown"}
+        
+        min_dist = float('inf')
+        nearest = None
+        
+        for idx, row in SENSITIVE_LOCS.iterrows():
+            dist = haversine(lng, lat, row['lng'], row['lat'])
+            if dist < min_dist:
+                min_dist = dist
+                nearest = row
+                
+        risk = "Low"
+        if min_dist < 2.0: risk = "High"
+        elif min_dist < 10.0: risk = "Moderate" # Larger buffer for city-level
+        
+        return {
+            "nearest_location": nearest['name'],
+            "type": nearest['category'],
+            "distance_km": round(min_dist, 2),
+            "risk": risk
+        }
+    except Exception as e:
+        print(f"Error in analyze_location: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Location analysis failed: {str(e)}")
 
 # Serve Frontend (Must be last to avoid shadowing API routes)
 # Serve Static Assets explicitly
