@@ -10,7 +10,6 @@ from math import radians, cos, sin, asin, sqrt
 
 # Import local modules
 from models import UserInput, EnrichedProjectInput, ImpactResult, MLPrediction, BlueprintResult
-from blueprint_utils import analyze_blueprint
 
 from fastapi.responses import FileResponse
 
@@ -137,6 +136,16 @@ def enrich_data(user_input: UserInput) -> EnrichedProjectInput:
 
 @app.post("/analyze-blueprint", response_model=BlueprintResult)
 async def upload_blueprint(file: UploadFile = File(...)):
+    # Check if blueprint analysis is available
+    try:
+        from blueprint_utils import analyze_blueprint
+    except ImportError as import_err:
+        return {
+            "success": False,
+            "data": None,
+            "message": f"Blueprint analysis not available: {str(import_err)}"
+        }
+    
     if file.filename.lower().endswith('.dwg'):
          return {
             "success": False, 
@@ -167,7 +176,7 @@ async def upload_blueprint(file: UploadFile = File(...)):
     except Exception as e:
         if os.path.exists(temp_path):
             os.remove(temp_path)
-        return {"success": False, "data": None, "message": str(e)}
+        return {"success": False, "data": None, "message": f"Analysis failed: {str(e)}"}
 
 @app.post("/calculate-impact", response_model=ImpactResult)
 def calculate_impact(user_data: UserInput):
