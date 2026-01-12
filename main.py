@@ -375,8 +375,10 @@ def analyze_location_proximity(city: str):
 
 # Serve Frontend (Must be last to avoid shadowing API routes)
 # Serve Static Assets explicitly
-app.mount("/js", StaticFiles(directory="js"), name="js")
-app.mount("/asset", StaticFiles(directory="asset"), name="asset")
+if os.path.isdir("js"):
+    app.mount("/js", StaticFiles(directory="js"), name="js")
+if os.path.isdir("asset"):
+    app.mount("/asset", StaticFiles(directory="asset"), name="asset")
 
 # Serve specific HTML files from root (Whitelist approach for security)
 @app.get("/{filename}.html")
